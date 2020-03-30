@@ -6,11 +6,13 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,29 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @Slf4j
 public class CommonExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public JbpResponseMessage methodArgumentNotValidExceptionHandle(MethodArgumentNotValidException exception){
+        StringBuffer buffer = new StringBuffer();
+
+        BindingResult result  = exception.getBindingResult();
+        if (result.hasErrors()) {
+
+            List<ObjectError> errors = result.getAllErrors();
+
+            errors.forEach(p ->{
+
+                FieldError fieldError = (FieldError) p;
+                log.error("Data check failure : object{"+fieldError.getObjectName()+"},field{"+fieldError.getField()+
+                        "},errorMessage{"+fieldError.getDefaultMessage()+"}");
+                buffer.append(fieldError.getDefaultMessage()).append(",");
+            });
+        }
+        return JbpResponseMessageUtil.buildError(buffer.toString());
+       /* BaseResponse response = new BaseResponse(BusinessCodeEnum.INVALID_PARAM);
+        response.setRespMsg(buffer.toString().substring(0, buffer.toString().length()-1));
+        return JSONObject.toJSONString(response);*/
+    }
 
     /**
      * 统一处理Bind校验异常
