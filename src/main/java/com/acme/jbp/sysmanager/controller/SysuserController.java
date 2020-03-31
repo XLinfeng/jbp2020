@@ -1,6 +1,8 @@
 package com.acme.jbp.sysmanager.controller;
 
 
+import com.acme.jbp.commons.JbpResponseMessage;
+import com.acme.jbp.commons.JbpResponseMessageUtil;
 import com.acme.jbp.sysmanager.entity.Dto.SysUserInputDto;
 import com.acme.jbp.sysmanager.service.ISysuserService;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,9 +41,9 @@ public class SysuserController {
     @ApiOperation(value="添加用户", notes="新增一个系统用户")
     @ApiImplicitParams(value = {@ApiImplicitParam(name = "dto",value = "系统用户信息Dto",paramType = "body",dataType = "SysUserInputDto",required = true)})
     @PostMapping(value = "/add")
-    public Long AddUser(@RequestBody @Validated SysUserInputDto dto){
+    public JbpResponseMessage AddUser(@RequestBody @Validated SysUserInputDto dto){
 
-        return  sysuserService.AddSysUser(dto);
+        return JbpResponseMessageUtil.buildSuccess(sysuserService.AddSysUser(dto));
 
     }
 }

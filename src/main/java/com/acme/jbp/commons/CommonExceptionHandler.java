@@ -23,27 +23,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CommonExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public JbpResponseMessage methodArgumentNotValidExceptionHandle(MethodArgumentNotValidException exception){
-        StringBuffer buffer = new StringBuffer();
-
-        BindingResult result  = exception.getBindingResult();
-        if (result.hasErrors()) {
-
-            List<ObjectError> errors = result.getAllErrors();
-
-            errors.forEach(p ->{
-
-                FieldError fieldError = (FieldError) p;
-                log.error("Data check failure : object{"+fieldError.getObjectName()+"},field{"+fieldError.getField()+
-                        "},errorMessage{"+fieldError.getDefaultMessage()+"}");
-                buffer.append(fieldError.getDefaultMessage()).append(",");
-            });
-        }
-        return JbpResponseMessageUtil.buildError(buffer.toString());
-       /* BaseResponse response = new BaseResponse(BusinessCodeEnum.INVALID_PARAM);
-        response.setRespMsg(buffer.toString().substring(0, buffer.toString().length()-1));
-        return JSONObject.toJSONString(response);*/
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public JbpResponseMessage httpMessageNotReadableExceptionHandle(HttpMessageNotReadableException exception){
+        return JbpResponseMessageUtil.buildError(exception.getLocalizedMessage());
     }
 
     /**
@@ -67,7 +49,13 @@ public class CommonExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public JbpResponseMessage MethodArgumentNotValidExceptionHandle(MethodArgumentNotValidException exception){
         Map<String,String> resultmsg = new HashMap<>();
-        exception.getBindingResult().getAllErrors().stream().collect(Collectors.toMap(objectError->((FieldError)objectError).getField(),objectError->((FieldError)objectError).getDefaultMessage()));
+        exception.getBindingResult().getFieldErrors().forEach(item->{
+            resultmsg.put(item.getField(),item.getDefaultMessage());
+            if(null != item){
+                resultmsg.put(item.getField(),item.getDefaultMessage());
+            }
+        });
+        //resultmsg = exception.getBindingResult().getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField,FieldError::getDefaultMessage));
         return JbpResponseMessageUtil.buildError(resultmsg);
     }
 
@@ -82,19 +70,10 @@ public class CommonExceptionHandler {
         } else if (e instanceof JbpSystemWarnException) {
             JbpSystemWarnException systemWarnException = (JbpSystemWarnException) e;
             log.error("系统异常！ 发生异常类: 【" + systemWarnException.getCause() + "】, 异常信息： " + e.getCause());
-        } else if(e instanceof MethodArgumentNotValidException ) {
-            BindingResult bindResult = ((MethodArgumentNotValidException) e).getBindingResult();
-            Map<String, String> resultmsg = new HashMap<>();
-            bindResult.getFieldErrors().stream().collect(Collectors.toMap(item -> item.getField(), item -> item.getDefaultMessage()));
-            return JbpResponseMessageUtil.buildError(resultmsg);
-        }else if(e instanceof HttpMessageNotReadableException){
-            BindingResult bindResult = ((MethodArgumentNotValidException) e).getBindingResult();
-            Map<String, String> resultmsg = new HashMap<>();
-            bindResult.getFieldErrors().stream().collect(Collectors.toMap(item -> item.getField(), item -> item.getDefaultMessage()));
-            return JbpResponseMessageUtil.buildError(resultmsg);
         }
         else {
-            log.error("一般异常！ 发生异常类: 【" + e.getCause() + "】, 异常信息： " + e.getCause());
+            log.error("一般异常！ 发生异常类: 【" + e.getCause() + "】, 异常信息： " + e.getLocalizedMessage());
+            return JbpResponseMessageUtil.buildError(e.getLocalizedMessage());
         }
         return JbpResponseMessageUtil.buildError(ResultEnums.ERROR);
     }

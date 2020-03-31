@@ -34,7 +34,6 @@ public class SysuserServiceImpl extends ServiceImpl<SysuserMapper, Sysuser> impl
     public Long AddSysUser(SysUserInputDto dto) {
 
         Sysuser user = mapperFactory.getMapperFacade().map(dto,Sysuser.class);
-
         user.setAddtime(Timestamp.valueOf(LocalDateTime.now()));
         user.setIsdeleted(false);
         user.setIsenable(true);
