@@ -16,5 +16,5 @@ public interface ISysuserService extends IService<Sysuser> {
 
     Long AddSysUser(SysUserInputDto dto);
 
-
+    Sysuser findUserByUserName(String userName);
 }
