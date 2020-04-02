@@ -1,16 +1,20 @@
 package com.acme.jbp.sysmanager.service.impl;
 
 import com.acme.jbp.sysmanager.entity.Dto.SysUserInputDto;
+import com.acme.jbp.sysmanager.entity.Sysrole;
 import com.acme.jbp.sysmanager.entity.Sysuser;
+import com.acme.jbp.sysmanager.mapper.SysroleMapper;
 import com.acme.jbp.sysmanager.mapper.SysuserMapper;
 import com.acme.jbp.sysmanager.service.ISysuserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jdk.internal.dynalink.linker.LinkerServices;
 import ma.glasnost.orika.MapperFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -29,6 +33,8 @@ public class SysuserServiceImpl extends ServiceImpl<SysuserMapper, Sysuser> impl
     @Autowired
     private SysuserMapper sysuserMapper;
 
+    @Autowired
+    private SysroleMapper sysroleMapper;
 
     @Override
     public Long AddSysUser(SysUserInputDto dto) {
@@ -41,5 +47,23 @@ public class SysuserServiceImpl extends ServiceImpl<SysuserMapper, Sysuser> impl
         user.setIslocked(false);
         sysuserMapper.insert(user);
         return  user.getId();
+    }
+
+    /**
+     * 应该优先从缓存数据中查找，然后再到数据库中查找
+     * @param userName
+     * @return
+     */
+
+    @Override
+    public Sysuser findUserByUserName(String userName) {
+
+        Sysuser sysuser = sysuserMapper.getUserByUsername(userName);
+        if(null  != sysuser){
+            List<Sysrole> sysroles = sysroleMapper.findRoleByUserId((sysuser.getId()));
+            sysuser.setRoles(sysroles);
+        }
+        return sysuser;
+
     }
 }
